@@ -1,0 +1,26 @@
+{
+    "city-mapping": {
+        "BER": "Berlin Bran­denburg",
+        "CGN": "Köln/Bonn",
+        "DRS": "Dresden",
+        "DUS": "Düsseldorf",
+        "FRA": "Frankfurt",
+        "HAM": "Hamburg",
+        "LEJ": "Leipzig/Halle",
+        "MUC": "München",
+        "NUE": "Nürnberg",
+        "TXL": "Berlin Tegel"
+    },
+    "station-mapping": {
+        "BER": "8011201",
+        "CGN": "8003330",
+        "DRS": "8011399",
+        "DUS": "8000082",
+        "FRA": "8070003",
+        "HAM": "8002547",
+        "LEJ": "8012183",
+        "MUC": "8004167",
+        "NUE": "8000284",
+        "TXL": "8089089"
+    }
+}

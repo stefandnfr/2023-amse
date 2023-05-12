@@ -17,12 +17,12 @@ The analysis helps municipalities and lawmakers to do reason about the necessity
 
 Displays origin, destination, number of passengers and CO2 emission of 236 flights from the municipality of Cologne.
 
-### Datasource2: Fahrplan Deutsche Bahn
-* Metadata URL: https://www.govdata.de/ckan/dataset/fahrplan-api.rdf
-* Data URL: https://developer.deutschebahn.com/store/apis/info?name=Fahrplan-Free&version=v1&provider=DBOpenData
-* Data Type: API
+### Datasource2: Haltestellen Deutsche Bahn
+* Metadata URL: https://data.deutschebahn.com/dataset/data-haltestellen/resource/21edf505-e97d-4c99-bcc9-a46e85f8620f.html
+* Data URL: https://download-data.deutschebahn.com/static/datasets/haltestellen/D_Bahnhof_2020_alle.CSV
+* Data Type: CSV
 
-Displays timetable of trains operated by Deutsche Bahn. 
+Displays all train stations operated by Deutsche Bahn. 
 
 ## Work Packages
 

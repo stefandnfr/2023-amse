@@ -38,7 +38,17 @@ def convertCSVToSQL():
                 origin = origin[0:3]
             if len(dest)>3:
                 dest = dest[0:3]
+
+            # manually fix error of wrong airport code in excel
+            if dest == "FR " or dest == "FR" or dest == " FR":
+                dest = "FRA"
+            #discard other non three alphanumeric names
+            if len(origin) != 3 or len(dest) != 3 or not origin.isalpha() or not dest.isalpha():
+                continue
+
             to_db.append((origin, dest, i["Anz. Flug"], i["CO2-Wert"]))
+
+
     cur.executemany("INSERT INTO t (origin, destination , quantity, emissions) VALUES (?, ?, ?, ?);", to_db)
     con.commit()
     con.close()

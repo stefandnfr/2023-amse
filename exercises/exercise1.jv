@@ -30,17 +30,17 @@ pipeline AirportsPipeline {
 
 	pipe {
 		from: AirportsCSVInterpreter;
-		to: AirportsTableInterpreter;
+		to: FirstRowDeleter;
 	}
 
-	// block FirstRowDeleter oftype RowDeleter {
-	// 	delete: [row 1];
-	// }
+	block FirstRowDeleter oftype RowDeleter {
+		delete: [row 1];
+	}
 
-	// pipe {
-	//    	from: FirstRowDeleter;
-	//    	to: AirportsTableInterpreter;
-	// }
+	pipe {
+	   	from: FirstRowDeleter;
+	   	to: AirportsTableInterpreter;
+	}
 
 	block AirportsTableInterpreter oftype TableInterpreter {
 		header: false;
@@ -54,7 +54,7 @@ pipeline AirportsPipeline {
 			"column_7" oftype decimal,
 			"column_8" oftype decimal,
 			"column_9" oftype integer,
-			"column_10" oftype integer,
+			"column_10" oftype decimal,
 			"column_11" oftype text,
 			"column_12" oftype text,
             "geo_punkt" oftype text

@@ -9,11 +9,14 @@ import os
 import csv 
 import json 
 
-flights_sql_file  = "data/fluege.sqlite"
-stations_sql_file  = "data/train_stations.sqlite"
-csv_file = "data/german-airports.csv"
-mapped_airports_file = "data/mapped_airports.json"
+
 def createTable():
+    flights_sql_file  = "data/fluege.sqlite"
+    stations_sql_file  = "data/train_stations.sqlite"
+    csv_file = "data/german-airports.csv"
+    mapped_airports_file = "data/mapped_airports.json"
+
+
     if not os.path.exists(flights_sql_file):
         print("fluege.sqlite does not exist. Can not create look up table if flight origins and destinations are not known. Try to run pull_fluege_db.py first")
         return
@@ -88,5 +91,3 @@ def createTable():
     with open(mapped_airports_file, 'w', encoding="utf-8") as f:
         json.dump(data, f,ensure_ascii=False)
 
-
-createTable()

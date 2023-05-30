@@ -1,28 +1,12 @@
 import json
 import os.path
 import sqlite3
+from .utils import removeOldDBIfExists
 
-flights_sql_file = "data/fluege.sqlite"
-domestic_flights_sql_file = "data/domestic_flights.sqlite"
-mapped_airports_file = "data/mapped_airports.json"
-
-def createDomesticFlightsDB():
-
+def createSQL(flights_sql_file, domestic_flights_sql_file, mapped_airports_file):
     if not os.path.exists(flights_sql_file):
         print("fluege sqlite does not exist. please run pull_fluege_db.py first")
         return
-    if os.path.exists(domestic_flights_sql_file):
-
-        confirmation = input("Are you sure you want to delete the old database domestic_flights.sqlite? (no backup will be made) \n(y/n): ")
-        if confirmation.lower() == "y":
-            os.remove(domestic_flights_sql_file)
-            print("old database deleted successfully.")
-        else:
-            print("Deletion cancelled. Not creating new database")
-            return
-    else:
-        print("Database does not exist. Creating new one...")
-
     # connect to flights database
     con = sqlite3.connect(flights_sql_file)
     cur = con.cursor()
@@ -74,4 +58,10 @@ def createDomesticFlightsDB():
     con.close()
 
 
-createDomesticFlightsDB()
+def createDomesticFlightsDB():
+    flights_sql_file = "data/fluege.sqlite"
+    domestic_flights_sql_file = "data/domestic_flights.sqlite"
+    mapped_airports_file = "data/mapped_airports.json"
+    removeOldDBIfExists(domestic_flights_sql_file, requires_confirmation=False)
+    createSQL(flights_sql_file, domestic_flights_sql_file, mapped_airports_file)
+

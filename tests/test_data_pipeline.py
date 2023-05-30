@@ -1,12 +1,50 @@
-from data.pull_fluege_db import saveCSVLocally,convertCSVToSQL,removeOldDBIfExists
-import data.pull_fluege_db
-import sqlite3
-# from ..data.pull_fluege_db import saveCSVLocally
 
+# from data.utils import saveCSVLocally,removeOldDBIfExists
+# from data.pull_fluege_db import convertCSVToSQL
+# from data.pipeline import pipeline
+# from data.utils import removeOldDBIfExists,saveCSVLocally
+# from data.pull_fluege_db import convertCSVToSQL
+from .context import saveCSVLocally,removeOldDBIfExists,convertCSVToSQL,pipeline
+import sqlite3
 import os
+
+# ===============================================================
+#                       test complete pipeline
+# ===============================================================
+def test_pipeline():
+    pipeline()
+
+    artefact = "./data/domestic_flights.sqlite"
+    assert os.path.isfile(artefact)
+    assert os.path.isfile("./data/fluege.sqlite")
+    assert os.path.isfile("./data/train_stations.sqlite")
+    assert os.path.isfile("./data/mapped_airports.json")
+
+    # Check if final artefact has expected rows and columns
+    conn = sqlite3.connect(artefact)
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) FROM t")
+    row_count = cursor.fetchone()[0]
+    cursor.execute("PRAGMA table_info(t)")
+    column_count = len(cursor.fetchall())
+
+    cursor.close()
+    conn.close()
+
+    # expecting at least one row == one domestic flight entry
+    assert (row_count > 0)
+
+    # expecting 6 columns
+    assert (column_count == 6)
+
+
+# ================================================================
+#                       test utils helper function
+# ================================================================
+
 def test_saveCSVlocally_checkIfExists():
     path = "example.csv"
-    saveCSVLocally(path)
+    saveCSVLocally(path, "")
     assert os.path.isfile(path)
     os.remove(path)
 
@@ -20,13 +58,18 @@ def test_removeOldDBIfExists():
     removeOldDBIfExists(sql_path,requires_confirmation=False)
     assert not os.path.exists(sql_path)
 
+# ================================================================
+#                       test pull fluege function
+# ================================================================
+
 def test_convertCSVToSQL():
     # check if already exists handling:
     sql_path = "example.sqlite"
     removeOldDBIfExists(sql_path,requires_confirmation=False)
 
     csv_path = "example.csv"
-    saveCSVLocally(csv_path)
+    url = "https://offenedaten-koeln.de/sites/default/files/Kompensationszahlungen_Fluege.csv"
+    saveCSVLocally(csv_path,url)
     convertCSVToSQL(csv_path,sql_path)
 
     assert os.path.isfile(sql_path)
@@ -54,4 +97,3 @@ def test_convertCSVToSQL():
 
 
 
-#test_saveCSVlocally_checkIfExists()

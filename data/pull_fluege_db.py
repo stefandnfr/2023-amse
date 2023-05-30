@@ -2,31 +2,28 @@ import requests
 import csv
 import os.path
 import sqlite3
+import sys
 
 url = "https://offenedaten-koeln.de/sites/default/files/Kompensationszahlungen_Fluege.csv"
 csv_file = "data/fluege.csv"
 sql_file = "data/fluege.sqlite"
-def saveCSVLocally():
-    r = requests.get(url, allow_redirects=True)
-    open(csv_file,"wb").write(r.content)
 
-def convertCSVToSQL():
-    if os.path.exists(sql_file):
+def getRequest():
+    return requests.get(url, allow_redirects=True)
 
-        confirmation = input("Are you sure you want to delete the old database? (no backup will be made) \n(y/n): ")
-        if confirmation.lower() == "y":
-            os.remove(sql_file)
-            print("old database deleted successfully.")
-        else:
-            print("Deletion cancelled. Not fetching new data")
-            return
-    else:
-        print("Database does not exist. Fetching new one...")
-    con = sqlite3.connect(sql_file)
+def saveCSVLocally(path):
+    try:
+        r = getRequest()
+        content = r.content
+    except:
+        content = bytes("Could not fetch data","utf-8")
+    open(path,"wb").write(content)
+
+def convertCSVToSQL(csv_path, sql_path ):
+    con = sqlite3.connect(sql_path)
     cur = con.cursor()
     cur.execute("CREATE TABLE t (origin, destination , quantity, emissions);") # use your column names here
-
-    with open(csv_file, "r") as fin: # `with` statement available in 2.5+
+    with open(csv_path, "r") as fin: # `with` statement available in 2.5+
         # csv.DictReader uses first line in file for column headings by default
         dr = csv.DictReader(fin,delimiter=";") # comma is default delimiter
         to_db = []
@@ -57,6 +54,27 @@ def convertCSVToSQL():
 def deleteTempCSV():
     if os.path.isfile(csv_file):
         os.remove(csv_file)
-saveCSVLocally()
-convertCSVToSQL()
-deleteTempCSV()
+
+def removeOldDBIfExists(sql_path, requires_confirmation=True):
+    if os.path.exists(sql_path):
+        if requires_confirmation:
+            confirmation = input("Are you sure you want to delete the old database? (no backup will be made) \n(y/n): ")
+        else: 
+            confirmation = "y" # if no confirmation required, automatically deletes old db
+            
+        if confirmation.lower() == "y":
+            os.remove(sql_path)
+            print("old database deleted successfully.")
+        else:
+            print("Deletion cancelled. Not fetching new data")
+            sys.exit()
+    else:
+        print("Database does not exist. Fetching new one...")
+
+
+
+if __name__ == "__main__":
+    saveCSVLocally(csv_file)
+    removeOldDBIfExists(sql_file, requires_confirmation=False)                     
+    convertCSVToSQL(csv_file,sql_file)
+    deleteTempCSV()

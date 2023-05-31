@@ -5,7 +5,7 @@ import os
 import re
 
 url = "https://download-data.deutschebahn.com/static/datasets/haltestellen/D_Bahnhof_2020_alle.CSV"
-sql_path = 'exercises/trainstops.sqlite'
+sql_path = 'trainstops.sqlite'
 
 data = pandas.read_csv(url, delimiter=";")
 

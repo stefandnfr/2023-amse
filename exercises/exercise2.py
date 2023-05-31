@@ -32,18 +32,21 @@ cursor.execute('''
     )
 ''')
 data = data.drop("Status",axis=1)
+data = data.dropna(axis=0)
+
+print("Found " + str(len(data)) + " non empty rows")
 
 # Iterate over the rows of the DataFrame
 for index, row in data.iterrows():
 
     # remove one data point as there is one invalid data point according to the test
-    if index == 220:
-        continue
-
     empty = False
     for r in row:
         if pandas.isnull(r):
             empty = True
+        if r == "NAN":
+            empty = True
+            print("Found a NAN")
     if empty:
         continue
 

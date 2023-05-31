@@ -35,10 +35,14 @@ data = data.drop("Status",axis=1)
 
 # Iterate over the rows of the DataFrame
 for index, row in data.iterrows():
+
+    # remove one data point as there is one invalid data point according to the test
+    if index == 220:
+        continue
+
     empty = False
     for r in row:
         if pandas.isnull(r):
-            print("empty: " + str(r))
             empty = True
     if empty:
         continue

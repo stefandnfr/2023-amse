@@ -20,20 +20,38 @@ cursor = conn.cursor()
 # Create a table in the SQLite database
 cursor.execute('''
     CREATE TABLE trainstops (
+        EVA_NR BIGINT,
+        DS100 TEXT,        
+        IFOPT TEXT,
+        NAME TEXT,
         Verkehr TEXT,
         Laenge REAL,
         Breite REAL,
-        IFOPT TEXT
+        Betreiber_Name TEXT,
+        Betreiber_Nr TEXT
     )
 ''')
 
 # Iterate over the rows of the DataFrame
 for index, row in data.iterrows():
+    empty = False
+    for r in row:
+        if len(str(r)) == 0 or str(r) == "NULL":
+            print("empty: " + str(index))
+            empty = True
+    if empty:
+        continue
+
     # Extract the values from the row
+    eva_nr = row['EVA_NR']
+    ds = row['DS100']
+    name = row['NAME']
     verkehr = row['Verkehr']
     laenge = row['Laenge']
     breite = row['Breite']
     ifopt = str(row['IFOPT'])
+    betreiber_name = row["Betreiber_Name"]
+    betreiber_nr = row["Betreiber_Nr"]
 
     # Check if the value in 'Verkehr' matches the regex pattern
     if not re.search(r"RV|nur DPN|FV", verkehr):
@@ -64,9 +82,9 @@ for index, row in data.iterrows():
 
     # Insert the values into the SQLite table
     cursor.execute('''
-        INSERT INTO trainstops (Verkehr, Laenge, Breite, IFOPT)
-        VALUES (?, ?, ? , ?)
-    ''', (verkehr, laenge_float, breite_float, ifopt))
+        INSERT INTO trainstops (EVA_NR,DS100,IFOPT,NAME,Verkehr,Laenge,Breite,Betreiber_Name,Betreiber_Nr)
+        VALUES (?,?,?,?,?, ?, ? ,?, ?)
+    ''', (eva_nr,ds,ifopt,name,verkehr, laenge_float, breite_float, betreiber_name,betreiber_nr))
 
 # Commit the changes and close the connection
 conn.commit()

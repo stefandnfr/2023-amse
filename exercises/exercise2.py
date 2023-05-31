@@ -28,16 +28,17 @@ cursor.execute('''
         Laenge REAL,
         Breite REAL,
         Betreiber_Name TEXT,
-        Betreiber_Nr TEXT
+        Betreiber_Nr INT
     )
 ''')
+data = data.drop("Status",axis=1)
 
 # Iterate over the rows of the DataFrame
 for index, row in data.iterrows():
     empty = False
     for r in row:
-        if len(str(r)) == 0 or str(r) == "NULL":
-            print("empty: " + str(index))
+        if pandas.isnull(r):
+            print("empty: " + str(r))
             empty = True
     if empty:
         continue

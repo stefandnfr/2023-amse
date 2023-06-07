@@ -44,9 +44,6 @@ for index, row in data.iterrows():
     for r in row:
         if pandas.isnull(r):
             empty = True
-        if r == "NAN":
-            empty = True
-            print("Found a NAN")
     if empty:
         continue
 
@@ -62,9 +59,12 @@ for index, row in data.iterrows():
     betreiber_nr = row["Betreiber_Nr"]
 
     # Check if the value in 'Verkehr' matches the regex pattern
-    if not re.search(r"RV|nur DPN|FV", verkehr):
-        print("found invalid verkehr data: " + str(verkehr))
-        continue  # Skip this iteration and move to the next row
+    if verkehr != "RV":
+        if verkehr != "nur DPN":
+            if verkehr != "FV":
+                print("found invalid verkehr data: " + str(verkehr))
+                continue  # Skip this iteration and move to the next row
+
 
     # Check if laenge and breite are floats between -90 and 90
     try:
@@ -80,7 +80,7 @@ for index, row in data.iterrows():
         continue
 
     # check if ifopt matches pattern
-    pattern = r"[A-Za-z][A-Za-z][0-9]*:[0-9]*(:[0-9]*)?"
+    pattern = r"[A-Za-z][A-Za-z]:[0-9]*:[0-9]*(:[0-9]*)?"
     if not re.search(pattern, ifopt):
         print("found invalid ifopt: " + str(ifopt))
         continue  # Skip this iteration and move to the next row

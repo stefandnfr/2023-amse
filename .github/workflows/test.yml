@@ -25,8 +25,5 @@ jobs:
       run: |
         ls
         cd main
-        ls
-        cd project
-        ls
-        ./main/project/tests.sh
+        ./project/tests.sh
         

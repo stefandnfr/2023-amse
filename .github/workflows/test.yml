@@ -23,5 +23,6 @@ jobs:
         path: main    
     - name: run test script
       run: |
+        ls
         ./main/project/tests.sh
         

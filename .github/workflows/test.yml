@@ -18,5 +18,8 @@ jobs:
     steps:
     # Runs a single command using the runners shell
     - name: run test script
-      run: ./project/tests.sh
+      run: |
+        ls 
+        dos2unix ./project/install.sh 
+        ./project/install.sh
       shell: bash

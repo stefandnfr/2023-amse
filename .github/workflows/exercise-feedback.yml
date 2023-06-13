@@ -11,9 +11,9 @@ jobs:
   test-feedback:
     runs-on: ubuntu-latest
     steps: 
-    - run: | 
-      ./project/tests.sh
-
+    - name: Run test script
+      run: ./project/tests.sh
+      shell: bash
   exercise-feedback:
     runs-on: ubuntu-latest
     steps:

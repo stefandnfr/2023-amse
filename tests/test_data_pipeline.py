@@ -95,5 +95,6 @@ def test_convertCSVToSQL():
     os.remove(sql_path)
 
 
-
+def testfail():
+    assert (3==2)
 

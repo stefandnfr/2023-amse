@@ -8,6 +8,12 @@ on:
     - exercises/**
 
 jobs:
+  test-feedback:
+    runs-on: ubuntu-latest
+    steps: 
+    - run: | 
+      ./project/tests.sh
+
   exercise-feedback:
     runs-on: ubuntu-latest
     steps:

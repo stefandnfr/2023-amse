@@ -23,6 +23,5 @@ jobs:
         path: main    
     - name: run test script
       run: |
-        ls 
-        cd main
-        ls
+        ./main/project/tests.sh
+        

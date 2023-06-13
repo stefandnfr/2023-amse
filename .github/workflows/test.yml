@@ -24,4 +24,5 @@ jobs:
     - name: run test script
       run: |
         ls 
-      shell: bash
+        cd main
+        ls

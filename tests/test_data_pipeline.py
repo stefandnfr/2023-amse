@@ -34,8 +34,9 @@ def test_pipeline():
     # expecting at least one row == one domestic flight entry
     assert (row_count > 0)
 
-    # expecting 6 columns
-    assert (column_count == 6)
+    # expecting 10 columns: 
+    # (origin, origin_long, origin_lat, destination, dest_long, dest_lat, train_origin, train_dest, quantity, emissions)
+    assert (column_count == 10)
 
 
 # ================================================================

@@ -62,7 +62,7 @@ def createTable():
         #print(city)
         search_name = city 
         #print("searching train station for " + search_name)
-        query = f"SELECT evanr,name FROM t WHERE (name LIKE '%{search_name}%' OR name LIKE '%{iata}%') AND (name like '%Flughafen%' OR name like '%Airport%') LIMIT 1"
+        query = f"SELECT evanr,name, long, lat FROM t WHERE (name LIKE '%{search_name}%' OR name LIKE '%{iata}%') AND (name like '%Flughafen%' OR name like '%Airport%') LIMIT 1"
         # Execute the query
         cur.execute(query)
         # Fetch the result
@@ -73,14 +73,21 @@ def createTable():
             #station name just for check if station name somewhat is close to airport
             #station_name = result[1]
             eva_nr = result[0]
-            mapped_train_stations[iata] = eva_nr
+            long = result[2]
+            lat = result[3]
+            station_data = {
+                "eva_nr" : eva_nr,
+                "long" : long,
+                "lat" : lat
+            }
+            mapped_train_stations[iata] = station_data
             #print("Found: " + station_name + " with eva nr " + eva_nr +  " for airport " + iata)
         else:
             # Nuremberg has no train station only Ubahn
             if iata == "NUE":
-                mapped_train_stations["NUE"] = "8000284"
+                mapped_train_stations["NUE"] = {"eva_nr":"8000284","long": "11,082989", "lat" : "49,445616"}
             elif iata == "TXL":
-                mapped_train_stations["TXL"] = "8089089"
+                mapped_train_stations["TXL"] =  {"eva_nr":"8089089","long": "13,289781", "lat" : "52,587998"}
             else:
                 print("did not find " + iata)
 

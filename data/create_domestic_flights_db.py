@@ -38,7 +38,7 @@ def createSQL(flights_sql_file, domestic_flights_sql_file, mapped_airports_file)
     # opening new database
     con = sqlite3.connect(domestic_flights_sql_file)
     cur = con.cursor()
-    cur.execute("CREATE TABLE t (origin, destination, train_origin, train_dest, quantity, emissions);") 
+    cur.execute("CREATE TABLE t (origin, origin_long, origin_lat, destination, dest_long, dest_lat, train_origin, train_dest, quantity, emissions);") 
 
     # insert result in new database
     if result is not None:
@@ -46,9 +46,19 @@ def createSQL(flights_sql_file, domestic_flights_sql_file, mapped_airports_file)
 
         # create dict entries adding the station origins and destinations
         for r in result:
-            to_db.append((r[0],r[1],mapped_airports["station-mapping"][r[0]], mapped_airports["station-mapping"][r[1]],r[2],r[3]))
+            origin = r[0]
+            destination = r[1]
+            train_origin = mapped_airports["station-mapping"][origin]["eva_nr"]
+            origin_long = mapped_airports["station-mapping"][origin]["long"]
+            origin_lat = mapped_airports["station-mapping"][origin]["lat"]
+            dest_long = mapped_airports["station-mapping"][destination]["long"]
+            dest_lat = mapped_airports["station-mapping"][destination]["lat"]
+            train_dest = mapped_airports["station-mapping"][destination]["eva_nr"]
+            quantity = r[2]
+            emissions = r[3]
+            to_db.append([origin, origin_long, origin_lat, destination, dest_long, dest_lat, train_origin, train_dest, quantity, emissions])
 
-        cur.executemany("INSERT INTO t (origin, destination, train_origin, train_dest, quantity, emissions) VALUES (?, ?, ?, ?, ?, ?);", to_db)
+        cur.executemany("INSERT INTO t (origin, origin_long, origin_lat, destination, dest_long, dest_lat, train_origin, train_dest, quantity, emissions) VALUES (?,?,?,?,?, ?, ?, ?, ?, ?);", to_db)
         con.commit()    
         print("created new database with " + str(len(to_db)) + " entries.")
     else: 

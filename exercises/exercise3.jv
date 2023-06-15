@@ -1,0 +1,79 @@
+// SPDX-FileCopyrightText: 2023 Friedrich-Alexander-Universitat Erlangen-Nurnberg
+//
+// SPDX-License-Identifier: AGPL-3.0-only
+
+pipeline CarsPipeline {
+
+	block CarsExtractor oftype HttpExtractor {
+		url: "https://www-genesis.destatis.de/genesis/downloads/00/tables/46251-0021_00.csv";
+	}
+
+	pipe {
+		from: CarsExtractor;
+		to: CarsTextFileInterpreter;
+	}
+
+	block CarsTextFileInterpreter oftype TextFileInterpreter {
+		encoding: "ascii";
+
+	}
+
+	pipe {
+		from: CarsTextFileInterpreter;
+		to: CarsCSVInterpreter;
+	}
+
+	block CarsCSVInterpreter oftype CSVInterpreter {
+        
+        delimiter: ";";
+        //enclosing: '"';
+	}
+
+	pipe {
+		from: CarsCSVInterpreter;
+		to: FirstRowDeleter;
+	}
+
+	block FirstRowDeleter oftype RowDeleter {
+		delete: [row 1,row 2, row 3, row 4, row 5];
+	}
+
+	pipe {
+	   	from: FirstRowDeleter;
+	   	to: NameHeaderWriter;
+	}
+	// chat gpt prompt: I want a list that looks like [column A, column B, ....,  column CE]. Write all letters from A,B,C to CE using excel style column naming and add the lowercase word column before each letter in a comma separated list
+	block NameHeaderWriter oftype ColumnDeleter {
+		delete: [column D, column E, column F, column G, column H, column I, column J, column K, column L, column N, column O, column P, column Q, column R, column S, column T, column U, column V, column X, column Y, column Z, column AA, column AB, column AC, column AD, column AE, column AF, column AH, column AI, column AJ, column AK, column AL, column AM, column AN, column AO, column AP, column AR, column AS, column AT, column AU, column AV, column AW, column AX, column AY, column AZ, column BB, column BC, column BD, column BE, column BF, column BG, column BH, column BI, column BJ, column BL, column BM, column BN, column BO, column BP, column BQ, column BR, column BS, column BT, column BV, column BW, column BX, column BY, column BZ, column CA, column CB, column CC, column CD, column CE]; 
+	}
+	
+	pipe {
+	   	from: NameHeaderWriter;
+	   	to: CarsTableInterpreter;
+	}
+	block CarsTableInterpreter oftype TableInterpreter {
+		header: false;
+		columns: [
+			"date" oftype text,
+			"CIN" oftype text,
+			"name" oftype text,
+			"petrol" oftype integer,
+			"diesel" oftype integer,
+			"gas" oftype integer,
+			"electro" oftype integer,
+			"hybrid" oftype integer,
+			"plugInHybrid" oftype integer,
+			"others" oftype integer,
+		];
+	}
+
+	pipe {
+		from: CarsTableInterpreter;
+		to: CarsLoader;
+	}
+
+	block CarsLoader oftype SQLiteLoader {
+		table: "cars";
+		file: "./cars.sqlite";
+	}
+}

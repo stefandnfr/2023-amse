@@ -12,7 +12,7 @@ import os
 #                       test complete pipeline
 # ===============================================================
 def test_pipeline():
-    pipeline()
+    pipeline(verbose=True)
 
     artefact = "./data/domestic_flights.sqlite"
     assert os.path.isfile(artefact)

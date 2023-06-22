@@ -71,7 +71,7 @@ def test_convertCSVToSQL():
     csv_path = "example.csv"
     url = "https://offenedaten-koeln.de/sites/default/files/Kompensationszahlungen_Fluege.csv"
     saveCSVLocally(csv_path,url)
-    convertCSVToSQL(csv_path,sql_path)
+    convertCSVToSQL(True, csv_path,sql_path)
 
     assert os.path.isfile(sql_path)
 

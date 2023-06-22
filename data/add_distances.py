@@ -261,10 +261,6 @@ def _addDistancesAndDurations(verbose,domestic_flights_sql_file, train_stations_
             quantity =r[8]
             flight_emissions = int(r[9])*1000
 
-            # drop rows with faulty data
-            if origin == destination:
-                continue
-
             trip = origin+"-"+destination
             # additional required data
             aerial_distance= calculate_aerial([origin_lat,origin_long,dest_lat,dest_long])

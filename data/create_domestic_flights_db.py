@@ -49,6 +49,11 @@ def createSQL(verbose,flights_sql_file, domestic_flights_sql_file, mapped_airpor
         for r in result:
             origin = r[0]
             destination = r[1]
+            
+            # drop rows with faulty data
+            if origin == destination:
+                continue
+
             train_origin = mapped_airports["station-mapping"][origin]["eva_nr"]
             origin_long = mapped_airports["station-mapping"][origin]["long"]
             origin_lat = mapped_airports["station-mapping"][origin]["lat"]

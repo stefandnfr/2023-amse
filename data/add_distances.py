@@ -319,7 +319,7 @@ def _addDistancesAndDurations(verbose,use_real_durations, domestic_flights_sql_f
             dest_lat = r[5]
             train_origin = r[6]
             train_dest = r[7]
-            quantity =r[8]
+            quantity =int(r[8])
             flight_emissions = int(r[9])*1000
 
             trip = origin+"-"+destination

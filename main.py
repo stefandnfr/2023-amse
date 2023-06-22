@@ -37,11 +37,12 @@ def showEmissionComparison():
     return df.head(3)    
 
 
-def showTime():
+def showTime(puffer_in_min):
+    df = pd.read_sql_table('t', 'sqlite:///data/final.sqlite')
 
     # Values for the bar chart
-    time_flight = 12
-    time_train = 10
+    time_flight = int((df['flight_duration'].sum()+ len(df)*puffer_in_min)/60) 
+    time_train = int(df['train_duration'].sum()/60)
 
     # Data for the x-axis and y-axis
     x = ['Flight', 'Train']
@@ -52,14 +53,35 @@ def showTime():
 
     # Add labels and title
     plt.xlabel('Method of Transportation')
-    plt.ylabel('Time (minutes)')
+    plt.ylabel('Time (hours)')
     plt.title('Total Travel Time Comparison')
 
     # Display the chart
     return plt.show()
 
 def showEmissions():
-    return None
+    df = pd.read_sql_table('t', 'sqlite:///data/final.sqlite')
+
+    # Values for the bar chart
+    total_A = int((df['train_emissions_A'] * df['quantity']).sum()/1000)
+    total_B = int((df['train_emissions_B'] * df['quantity']).sum()/1000)
+    total_flights = int(df['flight_emissions'].sum()/1000)
+
+    # Data for the x-axis and y-axis
+    x = ['train_A', 'train_B','flight']
+    y = [total_A, total_B,total_flights]
+
+    # Create the bar chart
+    plt.bar(x, y)
+
+    # Add labels and title
+    plt.xlabel('Method of Transportation')
+    plt.ylabel('Emissions (kg)')
+    plt.title('Total Emissions Comparison')
+
+    # Display the chart
+    return plt.show()
+
 
 if __name__ == "__main__":
     pipeline(verbose = True, use_real_durations= False)

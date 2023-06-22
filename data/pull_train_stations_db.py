@@ -19,7 +19,7 @@ def convertCSVToSQL(verbose,csv_path,sql_path):
     con.commit()
     con.close()
     if verbose:
-        print("created new database with " + str(len(to_db)) + " entries.")
+        print("created new database 'train_stations.sqlite' with " + str(len(to_db)) + " entries.")
 
 
 def pull_train_stations(verbose):

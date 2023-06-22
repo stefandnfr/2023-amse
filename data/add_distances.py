@@ -293,7 +293,9 @@ def _addDistancesAndDurations(verbose,domestic_flights_sql_file, train_stations_
         cur.executemany("INSERT INTO t (origin, destination, flight_duration_actual, flight_duration_estimated, train_duration, train_emissions_A, train_emissions_B, train_emissions_C, flight_emissions) VALUES (?, ?, ?, ?, ?,?, ?, ?, ?);", to_db)
         con.commit()    
         if verbose:
-            print("created new database with " + str(len(to_db)) + " entries.")
+            print("created new database 'final.sqlite' with " + str(len(to_db)) + " entries.")
+
+
     else: 
         if verbose:
             print("could not find any flights in the domestic_flights_db")

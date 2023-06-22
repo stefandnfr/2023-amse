@@ -62,7 +62,7 @@ def createSQL(verbose,flights_sql_file, domestic_flights_sql_file, mapped_airpor
         cur.executemany("INSERT INTO t (origin, origin_long, origin_lat, destination, dest_long, dest_lat, train_origin, train_dest, quantity, emissions) VALUES (?,?,?,?,?, ?, ?, ?, ?, ?);", to_db)
         con.commit()  
         if verbose:
-            print("created new database with " + str(len(to_db)) + " entries.")
+            print("created new database 'domestic_flights.sqlite' with " + str(len(to_db)) + " entries.")
     else: 
         if verbose:
             print("could not find any domestic flights in the database")

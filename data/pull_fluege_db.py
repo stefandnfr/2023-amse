@@ -36,7 +36,7 @@ def convertCSVToSQL(verbose, csv_path, sql_path ):
     con.commit()
     con.close()
     if verbose:
-        print("created new database with " + str(len(to_db)) + " entries.")
+        print("created new database 'fluege.sqlite' with " + str(len(to_db)) + " entries.")
 
 
 def pull_fluege_db(verbose):

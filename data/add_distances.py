@@ -13,26 +13,37 @@ REGIONAL_EMISSIONS_TRAIN_VALUE = 93 # g/km
 INTERREGIONAL_EMISSIONS_TRAIN_VALUE = 46 # g/km
 
 
-# this look ups has manually looked up flight times at value[0] for monday, 07/10/23. train times fetched from hafas client at value[1] for monday, 06/12/23 8am.
+# THIS DATA IS ALSO GENERATED AUTOMATICALLY. PLEASE READ COMMENTS
+# this look ups has manually looked up flight times, train times and flagged if not direct 
+# value[0] for flight duration in minutes for monday, 07/10/23 as seen on google flights
+# value[1] for train duration in minutes for monday, 06/12/23 8am fetched from hafas client 
+# value[2] flag set to 1 if flight was not direct, 0 for nonstop flights
 # the lookups dict is supposed to be a permanent and easy fall back method and is thus in the source code and should not be modified
 lookups ={
-"CGN-TXL": [70,354],
-"CGN-FRA": [180,64],# no direct
-"CGN-MUC": [70,342],
-"CGN-HAM": [65,316],
-"MUC-CGN": [70,369],
-"DUS-TXL": [70,318],
-"MUC-TXL": [60,371],
-"TXL-CGN": [70,433],
-"CGN-DRS": [200,407],# no direct
-"CGN-BER": [70,357],
-"TXL-DUS": [70,392],
-"DUS-DRS": [165,432],# no direct
-"NUE-CGN": [270,232],# no direct
-"CGN-LEJ": [195,422],# no direct
-"LEJ-CGN": [195,309],# no direct
-"DRS-CGN": [200,407],# no direct
-"DUS-LEJ": [170,328],# no direct
+"CGN-TXL": [70,354,0],
+"CGN-FRA": [180,64,1],# no direct
+"CGN-MUC": [70,342,0],
+"CGN-HAM": [65,316,0],
+"MUC-CGN": [70,369,0],
+"DUS-TXL": [70,318,0],
+"MUC-TXL": [60,371,0],
+"TXL-CGN": [70,433,0],
+"CGN-DRS": [200,407,1],# no direct
+"CGN-BER": [70,357,0],
+"TXL-DUS": [70,392,0],
+"DUS-DRS": [165,432,1],# no direct
+"NUE-CGN": [270,232,1],# no direct
+"CGN-LEJ": [195,422,1],# no direct
+"LEJ-CGN": [195,309,1],# no direct
+"DRS-CGN": [200,407,1],# no direct
+"DUS-LEJ": [170,328,1],# no direct
+}
+
+# these values are manully looked up using the UmweltMobilCheck tool 
+emissions_lookup = {
+    "CGN-TXL" : [2200,15100],
+    "CGN-MUC" : [2900,15600],
+    "CGN-DRS" : [460,16400],
 }
 
 def calculate_aerial(coords):
@@ -209,10 +220,56 @@ def get_both_emissions(trip,trip_train_info):
     return total_emissions_in_g
 
 
+def createFlightComparison(verbose, flights_comp, flight_duration_comparison_sql_file):
+    removeOldDBIfExists(flight_duration_comparison_sql_file,verbose, requires_confirmation=False)
+
+    con = sqlite3.connect(flight_duration_comparison_sql_file)
+    cur = con.cursor()
+    query = f"CREATE TABLE t (trip, estimated_duration, actual_duration, nonstop)"
+    con.execute(query)
+    to_db = []
+    for key, v in flights_comp.items():
+        to_db.append([key,v[0],v[1],v[2]])
+    cur.executemany("INSERT INTO t (trip, estimated_duration, actual_duration, nonstop) VALUES (?, ?, ?, ?);", to_db)
+    con.commit()    
+    if verbose:
+        print("created new database 'flight_comp.sqlite' with " + str(len(to_db)) + " entries.")
+    #close connection
+    con.close()
+
+def createCountedTripEmissions(verbose, emission_trip_counter, counted_trip_emissions_sql_file):
+    removeOldDBIfExists(counted_trip_emissions_sql_file,verbose, requires_confirmation=False)
+
+    con = sqlite3.connect(counted_trip_emissions_sql_file)
+    cur = con.cursor()
+    query = f"CREATE TABLE t  (trip, count, train_emission_A_own, market_based_UMC, train_emission_B_own, location_based_UMC)"
+    con.execute(query)
+    to_db = []
+
+    # sort them by most occuring trip
+    sorted_em = {k: v for k, v in sorted(emission_trip_counter.items(), key=lambda item: item[1][0], reverse=True)}
+    
+
+    for key, v in sorted_em.items():
+        index = v[0]
+        a_own = v[1]
+        a_UMC = v[2]
+        b_own = v[3]
+        b_UMC = v[4]
+        if key in emissions_lookup:
+            a_UMC = emissions_lookup[key][0]
+            b_UMC = emissions_lookup[key][1]
+
+        to_db.append([key,index, a_own, a_UMC, b_own, b_UMC])
+    cur.executemany("INSERT INTO t (trip, count, train_emission_A_own, market_based_UMC, train_emission_B_own, location_based_UMC) VALUES (?, ?, ?, ?, ?, ?);", to_db)
+    con.commit()    
+    if verbose:
+        print("created new database 'counted_trip_emissions.sqlite' with " + str(len(to_db)) + " entries.")
+    #close connection
+    con.close()    
 
 
-
-def _addDistancesAndDurations(verbose,domestic_flights_sql_file, train_stations_sql_file, domestic_distanced_flights_sql_file, trip_train_info_json):
+def _addDistancesAndDurations(verbose,use_real_durations, domestic_flights_sql_file, train_stations_sql_file, domestic_distanced_flights_sql_file,flight_duration_comparison_sql_file,counted_trip_emissions_sql_file, trip_train_info_json):
     if not os.path.exists(domestic_flights_sql_file):
         if verbose:
             print("domestic_flights.sqlite does not exist. please run create_domestic_flights.py first")
@@ -236,6 +293,10 @@ def _addDistancesAndDurations(verbose,domestic_flights_sql_file, train_stations_
     result = cur.fetchall()
     #close connection
     con.close()
+
+    # get stats for report
+    flights_comp = {}
+    emission_trip_counter = {}
 
     # insert result in new database
     if result is not None:
@@ -264,8 +325,18 @@ def _addDistancesAndDurations(verbose,domestic_flights_sql_file, train_stations_
             trip = origin+"-"+destination
             # additional required data
             aerial_distance= calculate_aerial([origin_lat,origin_long,dest_lat,dest_long])
-            flight_duration_estimated= estimate_duration(aerial_distance)            
-            flight_duration_actual= lookup_flight_duration(trip, flight_duration_estimated)
+            flight_duration= estimate_duration(aerial_distance)          
+
+            actual_flight_duration = lookup_flight_duration(trip, flight_duration)
+
+            # add flight durations to comparison
+            if trip not in flights_comp:
+                nonstop = "yes" if lookups[trip][2]==0 else "no"
+                flights_comp[trip] = [flight_duration,actual_flight_duration, nonstop]
+
+            # if flag is set use the actual duration for the database
+            if use_real_durations:
+                flight_duration= actual_flight_duration
 
             # getting the train info into trip_train_info 
             get_train_info(client, cur, trip, train_origin, train_dest, trip_train_info)
@@ -275,18 +346,25 @@ def _addDistancesAndDurations(verbose,domestic_flights_sql_file, train_stations_
 
             train_duration= get_train_duration(trip, trip_train_info, use_lookup=True)
             train_emissions_A= get_only_regional_emissions(trip,trip_train_info)
-            train_emissions_B= 0
-            train_emissions_C= get_both_emissions(trip, trip_train_info)
-            to_db.append([origin, destination, flight_duration_actual, flight_duration_estimated, train_duration, train_emissions_A, train_emissions_B, train_emissions_C, flight_emissions])
+            train_emissions_B= get_both_emissions(trip, trip_train_info)
+
+            if trip not in emission_trip_counter:
+                # unknown values for the UMC values. will be looked up later
+                emission_trip_counter[trip] = [1,train_emissions_A,0,train_emissions_B,0]
+            else:
+                # increment count
+                emission_trip_counter[trip][0] += 1
+
+            to_db.append([origin, destination, flight_duration, train_duration, train_emissions_A, train_emissions_B, flight_emissions,quantity])
 
         con.close()
         # connect to new distancedflights sql db 
         con = sqlite3.connect(domestic_distanced_flights_sql_file)
         cur = con.cursor()
-        query = f"CREATE TABLE t (origin, destination, flight_duration_actual, flight_duration_estimated, train_duration, train_emissions_A, train_emissions_B, train_emissions_C, flight_emissions)"
+        query = f"CREATE TABLE t (origin, destination, flight_duration, train_duration, train_emissions_A, train_emissions_B, flight_emissions, quantity)"
         con.execute(query)
 
-        cur.executemany("INSERT INTO t (origin, destination, flight_duration_actual, flight_duration_estimated, train_duration, train_emissions_A, train_emissions_B, train_emissions_C, flight_emissions) VALUES (?, ?, ?, ?, ?,?, ?, ?, ?);", to_db)
+        cur.executemany("INSERT INTO t (origin, destination, flight_duration, train_duration, train_emissions_A, train_emissions_B, flight_emissions, quantity) VALUES (?, ?, ?, ?, ?, ?, ?, ?);", to_db)
         con.commit()    
         if verbose:
             print("created new database 'final.sqlite' with " + str(len(to_db)) + " entries.")
@@ -295,9 +373,16 @@ def _addDistancesAndDurations(verbose,domestic_flights_sql_file, train_stations_
     else: 
         if verbose:
             print("could not find any flights in the domestic_flights_db")
-
     #close connection
     con.close()
+
+    # now write files
+
+    # creating flight duration comparison
+    createFlightComparison(verbose,flights_comp, flight_duration_comparison_sql_file)    
+
+    # create trip emission information
+    createCountedTripEmissions(verbose, emission_trip_counter, counted_trip_emissions_sql_file)
 
     # Open the JSON file in write mode
     with open(trip_train_info_json, 'w', encoding="utf-8") as file:
@@ -305,22 +390,26 @@ def _addDistancesAndDurations(verbose,domestic_flights_sql_file, train_stations_
         json.dump(trip_train_info, file, ensure_ascii=False)
 
 
-def addDistancesAndDurations(verbose):
+def addDistancesAndDurations(verbose, use_real_durations):
     # this is a json file to save the train infos to not overload api. When being deleted or cleared, its contents are newly fetched.
     # the lookups dict is supposed to be a permanent and easy fall back method that is supposed to be permanend and is thus in the source code and should not be modified
     trip_train_info_json = "data/trip_train_info.json"
     train_stations_sql_file = "data/train_stations.sqlite"
     domestic_flights_sql_file = "data/domestic_flights.sqlite"
-    domestic_distanced_flights_sql_file = "data/domestic_distanced_flights.sqlite"
+    flight_duration_comparison_sql_file = "data/flight_comp.sqlite"
+    domestic_distanced_flights_sql_file = "data/final.sqlite"
+    counted_trip_emissions_sql_file = "data/counted_trip_emissions.sqlite"
     removeOldDBIfExists(domestic_distanced_flights_sql_file,verbose, requires_confirmation=False)
 
     delay = 1 
     while delay < 65:
         try:
-            _addDistancesAndDurations(verbose, domestic_flights_sql_file,train_stations_sql_file, domestic_distanced_flights_sql_file, trip_train_info_json)
+            _addDistancesAndDurations(verbose, use_real_durations, domestic_flights_sql_file,train_stations_sql_file, domestic_distanced_flights_sql_file,flight_duration_comparison_sql_file,counted_trip_emissions_sql_file, trip_train_info_json)
             break
         except:
             delay *= 2
+            removeOldDBIfExists(domestic_distanced_flights_sql_file,verbose, requires_confirmation=False)
+
             if verbose:
                 print(f"did not work. try again in {delay} seconds...")
             time.sleep(delay)

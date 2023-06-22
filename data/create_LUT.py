@@ -10,7 +10,7 @@ import csv
 import json 
 
 
-def createTable():
+def createTable(verbose):
     flights_sql_file  = "data/fluege.sqlite"
     stations_sql_file  = "data/train_stations.sqlite"
     csv_file = "data/german-airports.csv"
@@ -18,7 +18,8 @@ def createTable():
 
 
     if not os.path.exists(flights_sql_file):
-        print("fluege.sqlite does not exist. Can not create look up table if flight origins and destinations are not known. Try to run pull_fluege_db.py first")
+        if verbose:
+            print("fluege.sqlite does not exist. Can not create look up table if flight origins and destinations are not known. Try to run pull_fluege_db.py first")
         return
     con = sqlite3.connect(flights_sql_file)
     cur = con.cursor()
@@ -53,7 +54,8 @@ def createTable():
     #now mapping the cities to their train stations
     mapped_train_stations = {}
     if not os.path.exists(stations_sql_file):
-        print("train_stations.sqlite does not exist. Can not create look up table if train stations are not known. Try to run pull_train_stations_db.py first")
+        if verbose:
+            print("train_stations.sqlite does not exist. Can not create look up table if train stations are not known. Try to run pull_train_stations_db.py first")
         return
     con = sqlite3.connect(stations_sql_file)
     cur = con.cursor()
@@ -89,7 +91,8 @@ def createTable():
             elif iata == "TXL":
                 mapped_train_stations["TXL"] =  {"eva_nr":"8089089","long": "13,289781", "lat" : "52,587998"}
             else:
-                print("did not find " + iata)
+                if verbose:
+                    print("did not find " + iata)
 
 
 

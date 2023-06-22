@@ -3,9 +3,10 @@ import os.path
 import sqlite3
 from .utils import removeOldDBIfExists
 
-def createSQL(flights_sql_file, domestic_flights_sql_file, mapped_airports_file):
+def createSQL(verbose,flights_sql_file, domestic_flights_sql_file, mapped_airports_file):
     if not os.path.exists(flights_sql_file):
-        print("fluege sqlite does not exist. please run pull_fluege_db.py first")
+        if verbose:
+            print("fluege sqlite does not exist. please run pull_fluege_db.py first")
         return
     # connect to flights database
     con = sqlite3.connect(flights_sql_file)
@@ -59,19 +60,21 @@ def createSQL(flights_sql_file, domestic_flights_sql_file, mapped_airports_file)
             to_db.append([origin, origin_long, origin_lat, destination, dest_long, dest_lat, train_origin, train_dest, quantity, emissions])
 
         cur.executemany("INSERT INTO t (origin, origin_long, origin_lat, destination, dest_long, dest_lat, train_origin, train_dest, quantity, emissions) VALUES (?,?,?,?,?, ?, ?, ?, ?, ?);", to_db)
-        con.commit()    
-        print("created new database with " + str(len(to_db)) + " entries.")
+        con.commit()  
+        if verbose:
+            print("created new database with " + str(len(to_db)) + " entries.")
     else: 
-        print("could not find any domestic flights in the database")
+        if verbose:
+            print("could not find any domestic flights in the database")
 
     #close connection
     con.close()
 
 
-def createDomesticFlightsDB():
+def createDomesticFlightsDB(verbose):
     flights_sql_file = "data/fluege.sqlite"
     domestic_flights_sql_file = "data/domestic_flights.sqlite"
     mapped_airports_file = "data/mapped_airports.json"
-    removeOldDBIfExists(domestic_flights_sql_file, requires_confirmation=False)
-    createSQL(flights_sql_file, domestic_flights_sql_file, mapped_airports_file)
+    removeOldDBIfExists(domestic_flights_sql_file,verbose, requires_confirmation=False)
+    createSQL(verbose, flights_sql_file, domestic_flights_sql_file, mapped_airports_file)
 

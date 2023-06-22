@@ -52,11 +52,11 @@ def test_saveCSVlocally_checkIfExists():
 def test_removeOldDBIfExists():
     # checking if exists when there is a sqlite file
     sql_path = "example.sqlite"
-    removeOldDBIfExists(sql_path, requires_confirmation= False)
+    removeOldDBIfExists(sql_path, verbose=True, requires_confirmation= False)
     assert not os.path.exists(sql_path)
 
     #now checking if there isnt one
-    removeOldDBIfExists(sql_path,requires_confirmation=False)
+    removeOldDBIfExists(sql_path, verbose=True, requires_confirmation=False)
     assert not os.path.exists(sql_path)
 
 # ================================================================
@@ -66,7 +66,7 @@ def test_removeOldDBIfExists():
 def test_convertCSVToSQL():
     # check if already exists handling:
     sql_path = "example.sqlite"
-    removeOldDBIfExists(sql_path,requires_confirmation=False)
+    removeOldDBIfExists(sql_path,verbose = True, requires_confirmation=False)
 
     csv_path = "example.csv"
     url = "https://offenedaten-koeln.de/sites/default/files/Kompensationszahlungen_Fluege.csv"

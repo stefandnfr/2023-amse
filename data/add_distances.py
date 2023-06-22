@@ -212,12 +212,14 @@ def get_both_emissions(trip,trip_train_info):
 
 
 
-def _addDistancesAndDurations(domestic_flights_sql_file, train_stations_sql_file, domestic_distanced_flights_sql_file, trip_train_info_json):
+def _addDistancesAndDurations(verbose,domestic_flights_sql_file, train_stations_sql_file, domestic_distanced_flights_sql_file, trip_train_info_json):
     if not os.path.exists(domestic_flights_sql_file):
-        print("domestic_flights.sqlite does not exist. please run create_domestic_flights.py first")
+        if verbose:
+            print("domestic_flights.sqlite does not exist. please run create_domestic_flights.py first")
         return
     if not os.path.exists(trip_train_info_json):
-        print("trip_train_info_json does not exist. creating new dictionary")
+        if verbose:
+            print("trip_train_info_json does not exist. creating new dictionary")
         trip_train_info = {}
     else:
         with open(trip_train_info_json, 'r', encoding="utf-8") as file:
@@ -290,9 +292,11 @@ def _addDistancesAndDurations(domestic_flights_sql_file, train_stations_sql_file
 
         cur.executemany("INSERT INTO t (origin, destination, flight_duration_actual, flight_duration_estimated, train_duration, train_emissions_A, train_emissions_B, train_emissions_C, flight_emissions) VALUES (?, ?, ?, ?, ?,?, ?, ?, ?);", to_db)
         con.commit()    
-        print("created new database with " + str(len(to_db)) + " entries.")
+        if verbose:
+            print("created new database with " + str(len(to_db)) + " entries.")
     else: 
-        print("could not find any flights in the domestic_flights_db")
+        if verbose:
+            print("could not find any flights in the domestic_flights_db")
 
     #close connection
     con.close()
@@ -303,25 +307,24 @@ def _addDistancesAndDurations(domestic_flights_sql_file, train_stations_sql_file
         json.dump(trip_train_info, file, ensure_ascii=False)
 
 
-def addDistancesAndDurations():
+def addDistancesAndDurations(verbose):
     # this is a json file to save the train infos to not overload api. When being deleted or cleared, its contents are newly fetched.
     # the lookups dict is supposed to be a permanent and easy fall back method that is supposed to be permanend and is thus in the source code and should not be modified
     trip_train_info_json = "data/trip_train_info.json"
     train_stations_sql_file = "data/train_stations.sqlite"
     domestic_flights_sql_file = "data/domestic_flights.sqlite"
     domestic_distanced_flights_sql_file = "data/domestic_distanced_flights.sqlite"
-    removeOldDBIfExists(domestic_distanced_flights_sql_file, requires_confirmation=False)
+    removeOldDBIfExists(domestic_distanced_flights_sql_file,verbose, requires_confirmation=False)
 
     delay = 1 
     while delay < 65:
         try:
-            _addDistancesAndDurations( domestic_flights_sql_file,train_stations_sql_file, domestic_distanced_flights_sql_file, trip_train_info_json)
+            _addDistancesAndDurations(verbose, domestic_flights_sql_file,train_stations_sql_file, domestic_distanced_flights_sql_file, trip_train_info_json)
             break
         except:
             delay *= 2
-            print(f"did not work. try again in {delay} seconds...")
+            if verbose:
+                print(f"did not work. try again in {delay} seconds...")
             time.sleep(delay)
 
 
-
-addDistancesAndDurations()

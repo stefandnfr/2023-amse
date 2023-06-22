@@ -5,7 +5,7 @@ import sqlite3
 from .utils import saveCSVLocally,removeOldDBIfExists
 
 
-def convertCSVToSQL(csv_path,sql_path):
+def convertCSVToSQL(verbose,csv_path,sql_path):
     con = sqlite3.connect(sql_path)
     cur = con.cursor()
     cur.execute("CREATE TABLE t (evanr, name, long, lat);") # use your column names here
@@ -18,16 +18,17 @@ def convertCSVToSQL(csv_path,sql_path):
     cur.executemany("INSERT INTO t (evanr, name, long, lat) VALUES (?,?,?,?);", to_db)
     con.commit()
     con.close()
-    print("created new database with " + str(len(to_db)) + " entries.")
+    if verbose:
+        print("created new database with " + str(len(to_db)) + " entries.")
 
 
-def pull_train_stations():
+def pull_train_stations(verbose):
     url = "https://download-data.deutschebahn.com/static/datasets/haltestellen/D_Bahnhof_2020_alle.CSV"
     csv_file = "data/train_stations.csv"
     sql_file = "data/train_stations.sqlite"
     saveCSVLocally(csv_file,url)
-    removeOldDBIfExists(sql_file,requires_confirmation=False)
-    convertCSVToSQL(csv_file,sql_file)
+    removeOldDBIfExists(sql_file,verbose,requires_confirmation=False)
+    convertCSVToSQL(verbose, csv_file,sql_file)
     if os.path.exists(csv_file):
         os.remove(csv_file)
         

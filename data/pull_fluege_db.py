@@ -16,9 +16,9 @@ def convertCSVToSQL(verbose, csv_path, sql_path ):
         for i in dr:
             origin = i["Flug Von"]
             dest = i["Flug Nach"]
+
             if len(origin) > 3:
-                #print(i["Flug Von"])
-                origin = origin[0:3]
+                continue
             if len(dest)>3:
                 dest = dest[0:3]
 

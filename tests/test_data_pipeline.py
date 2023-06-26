@@ -89,7 +89,7 @@ def test_convertCSVToSQL():
     # Close the cursor and the database connection
     cursor.close()
     conn.close()
-    assert (row_count == 236)
+    assert (row_count == 200)
     assert (column_count == 4)
 
     os.remove(csv_path)

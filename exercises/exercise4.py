@@ -1,7 +1,6 @@
 import pandas
 import sqlite3
 import os
-import re
 import urllib.request
 from zipfile import ZipFile
 import shutil 
@@ -9,24 +8,24 @@ import shutil
 url = "https://www.mowesta.com/data/measure/mowesta-dataset-20221107.zip"
 sql_path = 'temperatures.sqlite'
 
-
+# get and unpack zip
 zip = urllib.request.urlretrieve(url,"ex4_data.zip")
-
-
 with ZipFile('ex4_data.zip', 'r') as f:
-    #extract in current directory
     f.extractall("ex4_data")
 
 csv_path = os.path.join(os.getcwd(),"ex4_data","data.csv")
+
+# only import certain columns as some rows are variable length
 data = pandas.read_csv(csv_path, sep=";", usecols=[0,1,2,3,4,9,10], header=None)
 
+# remove artifacts
 shutil.rmtree("ex4_data")
 os.remove("ex4_data.zip")
 
-data= data.tail(-1) # drop first row
-print(data.head())
+# drop first row which was header
+data= data.tail(-1) 
 
-# remove if already exists
+# remove sql if already exists
 if os.path.isfile(sql_path):
     os.remove(sql_path)
 
@@ -47,6 +46,7 @@ cursor.execute('''
     )
 ''')
 
+# drop NANs
 data = data.dropna(axis=0)
 
 print("Found " + str(len(data)) + " non empty rows")
@@ -54,55 +54,39 @@ print("Found " + str(len(data)) + " non empty rows")
 # Iterate over the rows of the DataFrame
 for index, row in data.iterrows():
 
-    # remove one data point as there is one invalid data point according to the test
-    empty = False
-    for r in row:
-        if pandas.isnull(r):
-            empty = True
-    if empty:
-        continue
-
     # Extract the values from the row
     g = int(row[0])
     h = row[1]
     m = row[2]
     mo = int(row[3])
-    t = float(row[4].replace(',', '.'))
-    bt = float(row[9].replace(',', '.'))
+
+    # extract temperatures as floats
+    try:
+        t = float(row[4].replace(',', '.'))
+        bt = float(row[9].replace(',', '.'))
+    except:
+        print("temperatures cannot be converted to a float.")
+        continue        
     ga = row[10]
 
+    # convert to fahrenheit
     t = (t*9/5) + 32
     bt = (bt*9/5) + 32
 
-    # # Check if the value in 'Verkehr' matches the regex pattern
-    # if verkehr != "RV":
-    #     if verkehr != "nur DPN":
-    #         if verkehr != "FV":
-    #             print("found invalid verkehr data: " + str(verkehr))
-    #             continue  # Skip this iteration and move to the next row
+    # # Check if the value in geraete id is greater than 0
+    if g <= 0:
+        print("found invalid Geraete id: " + str(g))
+        continue  # Skip this iteration and move to the next row
 
+    # Check if temperatures are floats between 0 and 130
+    if t < 0.0 or t > 130.0:
+        print("temperature to high: " + str(t))
+        continue
 
-    # # Check if laenge and breite are floats between -90 and 90
-    # try:
-    #     breite_float = float(breite.replace(',', '.'))
-    #     laenge_float = float(laenge.replace(',', '.'))
-    #     if not (-90 <= laenge_float <= 90):
-    #         print("Variable breite is a float between -90 and 90.")
-    #         continue    
-    #     if not(-90 <= breite_float <= 90):
-    #         print("Variable laenge is not within the range of -90 to 90.")
-    # except ValueError:
-    #     print("Variable cannot be converted to a float.")
-    #     continue
-
-    # # check if ifopt matches pattern
-    # pattern = r"[A-Za-z][A-Za-z]:[0-9]*:[0-9]*(:[0-9]*)?"
-    # if not re.search(pattern, ifopt):
-    #     print("found invalid ifopt: " + str(ifopt))
-    #     continue  # Skip this iteration and move to the next row
-
-
-
+    # Check if temperatures are floats between 0 and 130
+    if bt < 0.0 or bt > 130.0:
+        print("battery temperature to high: " + str(bt))
+        continue
 
     # Insert the values into the SQLite table
     cursor.execute('''

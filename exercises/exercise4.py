@@ -37,10 +37,10 @@ cursor = conn.cursor()
 # Create a table in the SQLite database
 cursor.execute('''
     CREATE TABLE temperatures (
-        Geraet TEXT,
+        Geraet INT,
         Hersteller TEXT,        
         Model TEXT,
-        Monat TEXT,
+        Monat INT,
         Temperatur FLOAT,
         Batterietemperatur FLOAT,
         "Geraet aktiv" TEXT
@@ -63,10 +63,10 @@ for index, row in data.iterrows():
         continue
 
     # Extract the values from the row
-    g = row[0]
+    g = int(row[0])
     h = row[1]
     m = row[2]
-    mo = row[3]
+    mo = int(row[3])
     t = float(row[4].replace(',', '.'))
     bt = float(row[9].replace(',', '.'))
     ga = row[10]

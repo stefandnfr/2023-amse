@@ -1,0 +1,93 @@
+// SPDX-FileCopyrightText: 2023 Friedrich-Alexander-Universitat Erlangen-Nurnberg
+//
+// SPDX-License-Identifier: AGPL-3.0-only
+
+pipeline BusPipeline {
+
+	block BusExtractor oftype HttpExtractor {
+		url: "https://gtfs.rhoenenergie-bus.de/GTFS.zip";
+	}
+	pipe {
+		from: BusExtractor;
+		to: ZipArchiveInterpreter;
+	}
+
+	block ZipArchiveInterpreter oftype ArchiveInterpreter {
+	archiveType: "zip";
+	}
+	pipe {
+		from: ZipArchiveInterpreter;
+		to: ZipFilePicker;
+	}
+
+	block ZipFilePicker oftype FilePicker {
+	path: "/stops.txt";
+	}
+
+	pipe {
+		from: ZipFilePicker;
+		to: BusTextFileInterpreter;
+	}
+
+	block BusTextFileInterpreter oftype TextFileInterpreter {
+		encoding: "utf-8";
+
+	}
+
+	pipe {
+		from: BusTextFileInterpreter;
+		to: BusInterpreter;
+	}
+
+	block BusInterpreter oftype CSVInterpreter {
+        
+        delimiter: ",";
+        enclosing: '"';
+	}
+
+	pipe {
+		from: BusInterpreter;
+	   	to: BusTableInterpreter;
+	}
+
+	// creating zone range of 2001
+	constraint zoneRange oftype RangeConstraint {
+    lowerBound: 2001;
+    lowerBoundInclusive: true;
+    upperBound: 2001;
+    upperBoundInclusive: true;
+	}
+	valuetype zone oftype decimal {
+		constraints: [ zoneRange ];
+	}
+
+	// creating coordinate range from -90 to 90
+	constraint coordinateRange oftype RangeConstraint {
+    lowerBound: -90.0;
+    lowerBoundInclusive: true;
+    upperBound: 90.0;
+    upperBoundInclusive: true;
+	}
+	valuetype coordinate oftype decimal {
+		constraints: [ coordinateRange ];
+	}
+
+	block BusTableInterpreter oftype TableInterpreter {
+		header: true;
+		columns: [
+			"stop_id" oftype integer,
+			"stop_name" oftype text,
+			"stop_lat" oftype coordinate,
+			"stop_lon" oftype coordinate,
+			"zone_id" oftype zone,
+		];
+	pipe {
+		from: BusTableInterpreter;
+		to: BusLoader;
+	}
+
+	block BusLoader oftype SQLiteLoader {
+		table: "stops";
+		file: "./gtfs.sqlite";
+	}
+}

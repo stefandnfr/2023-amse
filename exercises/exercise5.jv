@@ -84,9 +84,23 @@ pipeline BusPipeline {
 	}
 	pipe {
 		from: BusTableInterpreter;
-		to: BusLoader;
+		to: CelsiusToFahrenheitTransformer;
+	}
+	transform decimaltoint {
+		from zonedec oftype decimal;
+		to zoneint oftype integer;
+		zoneint: floor(zonedec);
+	}
+	block CelsiusToFahrenheitTransformer oftype TableTransformer {
+		inputColumn: 'zone_id';
+		outputColumn: 'zone_id';
+		use: decimaltoint;
 	}
 
+	pipe {
+		from: CelsiusToFahrenheitTransformer;
+		to: BusLoader;
+	}
 	block BusLoader oftype SQLiteLoader {
 		table: "stops";
 		file: "./gtfs.sqlite";

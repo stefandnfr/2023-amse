@@ -81,6 +81,7 @@ pipeline BusPipeline {
 			"stop_lon" oftype coordinate,
 			"zone_id" oftype zone,
 		];
+	}
 	pipe {
 		from: BusTableInterpreter;
 		to: BusLoader;
